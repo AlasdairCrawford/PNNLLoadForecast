@@ -9,7 +9,13 @@ Times<-seq(LastTimeObserved,"2015-01-01"%>%as.Date,by=-1)%>%
   as.character(format="%Y-%m-%dT00:00:00")
 
 APIKey<-"C:\\Users\\craw038\\Documents\\DarkSkyAPI.txt"%>%read.table()%>%.$V1%>%as.character
-Location<-c(46.2804,-119.3)
+
+SummaryTable<-"C:\\Users\\craw038\\Documents\\PNNLLoadForecast\\DataSummary.xlsx"%>%read_excel()
+
+SummaryTable%>%
+  filter(Site=="EnergyNW")%>%
+  select(Lat,Long)%>%
+  t%>%as.numeric->Location
 
 data<-read_feather("RichlandWeather.feather")
 for(i in Times){

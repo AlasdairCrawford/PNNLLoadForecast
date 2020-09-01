@@ -43,5 +43,20 @@ colnames(OPALCOLoad)<- l
 OPALCOLoad%>%
   mutate(DateTime=DateTime%>%force_tz("America/Los_Angeles"))->OPALCOLoad
 
+OPALCOWeather<-"Load Data\\OPALCO\\OPALCOWeather.feather"%>%
+  read_feather()%>%
+  mutate(Time=as.POSIXct(time,origin="1970-01-01"))
+
+
+OPALCOLoad$Temp<- approx(OPALCOWeather$Time,OPALCOWeather$temperature,OPALCOLoad$DateTime)$y
+
+OPALCOLoad%>%
+  group_by(DateTime)%>%
+  summarise(Load=sum(Load),
+            Temp=mean(Temp))%>%
+  mutate(DateTime=round_date(DateTime,"1 hour"))%>%
+  group_by(DateTime)%>%
+  summarise_all(mean)%>%
+  mutate(Hour=hour(DateTime))%>%ggplot(aes(x=Temp,y=Load))+geom_point()+facet_wrap(.~Hour,scales="free")
 
 write_feather(OPALCOLoad, "Load Data\\ProcessedData\\OPALCOTotal.feather")

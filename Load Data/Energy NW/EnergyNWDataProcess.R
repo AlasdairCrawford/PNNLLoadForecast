@@ -40,9 +40,19 @@ for(i in 1:length(excelfiles)){
   dfs[[i]]<-df
 }
 
-data<-dfs%>%
+EnergyNWLoad<-dfs%>%
   bind_rows%>%
-  mutate(Time=`Interval Ending`%>%force_tz(),
+  transmute(DateTime=`Interval Ending`%>%force_tz("America/Los_Angeles"),
          Load=value,
          Tag)%>%
   na.omit()
+
+
+EnergyNWLoad%>%
+  group_by(DateTime,Tag)%>%
+  mutate(Load=(Load)/n())%>%
+  group_by(DateTime)%>%
+  mutate(Load=sum(Load,na.rm=TRUE))%>%
+  filter(Tag==min(Tag))%>%
+  select(-Tag)%>%
+  write_feather("Load Data\\ProcessedData\\EnergyNW.feather")
