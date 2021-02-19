@@ -1,3 +1,4 @@
+
 library(dplyr)
 library(reshape2)
 library(readr)
@@ -47,12 +48,16 @@ EnergyNWLoad<-dfs%>%
          Tag)%>%
   na.omit()
 
-
 EnergyNWLoad%>%
   group_by(DateTime,Tag)%>%
   mutate(Load=(Load)/n())%>%
   group_by(DateTime)%>%
   mutate(Load=sum(Load,na.rm=TRUE))%>%
   filter(Tag==min(Tag))%>%
-  select(-Tag)%>%
-  write_feather("Load Data\\ProcessedData\\EnergyNW.feather")
+  select(-Tag)->EnergyNWLoad
+RichlandWeather<-"C:\\Users\\craw038\\OneDrive - PNNL\\Documents2\\LoadForecast\\RichlandWeather.feather"%>%read_feather()%>%
+  mutate(Time=as.POSIXct(time,origin="1970-01-01"))
+
+EnergyNWLoad$Temp<-approx(RichlandWeather$Time,RichlandWeather$temperature,EnergyNWLoad$DateTime)$y
+
+EnergyNWLoad%>%write_feather("Load Data\\ProcessedData\\EnergyNW.feather")
